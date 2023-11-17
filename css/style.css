@@ -1,0 +1,31 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    text-align: center;
+    align-items: center;
+}
+
+
+.userInfo {
+    margin-top: 16px;
+}
+
+#username {
+    width: 400px;
+}
+
+
+.chatContents {
+    margin-top: 16px;
+}
+
+#chatInput {
+    width: 400px;
+}
+
+#send {
+    background-color: transparent;
+    border-radius: 30%;
+}  

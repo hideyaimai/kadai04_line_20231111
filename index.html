@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!-- cssを紐づけました -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- アイコン表示をするために紐づけました -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</head>
+
+<body>
+    <!-- firebaseのデータを入れる箱 -->
+    <div id="output">
+
+    </div>
+
+    <!-- ユーザーが入力する箱 -->
+    <div class="usercontents">
+
+        <!-- 名前を入力 -->
+        <div class="userInfo">
+            <p class="userNameText">名前</p>
+            <input type="text" id="username">
+        </div>
+
+        <!-- 内容を入力 -->
+        <div class="chatContents">
+            <p class="chattext">内容</p>
+            <textarea id="chatInput" cols="30" rows="1"></textarea>
+            <button   id="send" class="far fa-paper-plane"></button>
+        </div>
+        
+    </div>
+
+
+
+
+    <!-- jqueryの紐づけをしました -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- jsを紐付けをしました -->
+    <script src="js/work.js"> </script>
+
+    <!-- firebseを紐づけました（CDN） -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+        // onChildChangedを追加しました
+        import { getDatabase, ref, push, set, update, onChildAdded, remove, onChildRemoved, onChildChanged }
+            from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+        // Your web app's Firebase configuration
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        // dbへの接続
+        const db  = getDatabase(app)
+        // 階層を作成する
+        const dbRef = ref(db, "chat");
+
+        
+        // クリックアクションを作成します
+        // データをhtmlから取る→オブジェクト（塊）にする→オブジェクトをfirebaseに送る→htmlを消す
+        $("#send").on('click',function(){
+        
+            const username  = $("#username").val();
+            const chatinput = $("#chatInput").val();
+
+            const msg = {
+                username:  username,
+                text:      chatinput,
+            }
+
+            const newPostRef = push(dbRef);
+            set(newPostRef,msg);
+
+            $("#username").val("");
+            $("#chatInput").val("");
+        });
+
+        
+        onChildAdded(dbRef,function(date){
+
+            const msg = date.val();
+            const key = date.key;
+
+            let h = '<p id="' + key + '">';
+                h += msg.username;
+                h += '<br>';
+                h += '<span contentEditable="true" id="' + key + '_update">' + msg.text + '</span>';
+                h += '<br>';
+                h += '<span class="remove" data-key="' + key + '">🗑</span>'
+                h += '<span class="update" datta-key="' + key + '">アップ</span>'
+                h += '</p>';
+
+            $("#output").append(h);
+        })
+
+        //firebaseのデータを削除？
+        $("#output").on("click", ".remove", function(){
+            const key = $(this).attr("data-key");
+            const remove_item = ref(db, "chat/"+key);
+            remove(remove_item); //Firebaseのデータ削除関数
+        });
+
+        //firebaseのデータを更新？
+        $("#output").on("click", ".update", function(){
+            const key = $(this).attr("data-key");
+            update(ref(db, "chat/"+key), {
+                value: $("#"+key+'_update').html()
+            });
+        });
+
+        //firebaseでデータ削除がされたらhtmlを削除
+        onChildRemoved(dbRef, (data) => {
+            $("#" + data.key).remove(); //DOM操作削除（対象を削除）
+        });
+
+        //firebaseで実行されたらhtmlを更新
+        onChildChanged(dbRef, (data) => {
+            $("#" + data.key + '_update').html(data.val().text);
+            $("#" + data.key + '_update').fadeOut(800).fadeIn(800);
+        });
+
+
+      </script>
+</body>
+</html>
