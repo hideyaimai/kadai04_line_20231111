@@ -10,6 +10,7 @@
 
     <!-- アイコン表示をするために紐づけました -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    
 </head>
 
 <body>
@@ -44,21 +45,18 @@
 
     <!-- jsを紐付けをしました -->
     <script src="js/work.js"> </script>
+    
 
     <!-- firebseを紐づけました（CDN） -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
         // onChildChangedを追加しました
         import { getDatabase, ref, push, set, update, onChildAdded, remove, onChildRemoved, onChildChanged }
             from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+        
         // Your web app's Firebase configuration
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-      
-        // Your web app's Firebase configuration
-   
-      
+        
+
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         // dbへの接続
@@ -86,51 +84,61 @@
             $("#chatInput").val("");
         });
 
-        
         onChildAdded(dbRef,function(date){
 
-            const msg = date.val();
+            // keyは更新と削除にりようする
             const key = date.key;
-
+            const msg = date.val();
+            
+            // 以下のように書くことで細かく定義ができて編集しやすい
             let h = '<p id="' + key + '">';
                 h += msg.username;
                 h += '<br>';
                 h += '<span contentEditable="true" id="' + key + '_update">' + msg.text + '</span>';
-                h += '<br>';
+                h += '<span class="update" data-key="' + key + '">🆙</span>'
                 h += '<span class="remove" data-key="' + key + '">🗑</span>'
-                h += '<span class="update" datta-key="' + key + '">アップ</span>'
                 h += '</p>';
 
             $("#output").append(h);
         })
 
-        //firebaseのデータを削除？
+        //firebaseのデータを削除
         $("#output").on("click", ".remove", function(){
             const key = $(this).attr("data-key");
             const remove_item = ref(db, "chat/"+key);
             remove(remove_item); //Firebaseのデータ削除関数
         });
 
-        //firebaseのデータを更新？
+        //firebaseのデータを更新
         $("#output").on("click", ".update", function(){
             const key = $(this).attr("data-key");
             update(ref(db, "chat/"+key), {
-                value: $("#"+key+'_update').html()
+                text: $("#"+key+'_update').html()
             });
         });
 
-        //firebaseでデータ削除がされたらhtmlを削除
+        //firebaseでデータの削除がされたらhtmlに反映
         onChildRemoved(dbRef, (data) => {
             $("#" + data.key).remove(); //DOM操作削除（対象を削除）
         });
 
-        //firebaseで実行されたらhtmlを更新
+        //firebaseでデータの更新がされたらhtmlに反映
         onChildChanged(dbRef, (data) => {
             $("#" + data.key + '_update').html(data.val().text);
-            $("#" + data.key + '_update').fadeOut(800).fadeIn(800);
+            $("#" + data.key + '_update').fadeOut(1000).fadeIn(1000);
         });
 
-
+        //新規登録処理
+        register.addEventListener('click', function(e) {
+            var mailAddress = document.getElementById('mailAddress').value;
+            var password = document.getElementById('password').value;
+    
+            firebase.auth().createUserWithEmailAndPassword(mailAddress, password)
+            .catch(function(error) {
+            alert('登録できません（' + error.message + '）');
+            });
+        });
       </script>
+      
 </body>
 </html>
